@@ -1,0 +1,76 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List
+import mysql.connector
+
+app = FastAPI()
+
+# MySQL connection
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="password",
+    database="mydb"
+)
+
+# Models
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+class Post(BaseModel):
+    id: int
+    title: str
+    content: str
+    user_id: int
+
+# Users Endpoints
+
+@app.get("/users/", response_model=List[User])
+def read_users():
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users")
+    results = cursor.fetchall()
+    return results
+
+@app.get("/users/{user_id}", response_model=User)
+def read_user(user_id: int):
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    return result
+
+@app.post("/users/", response_model=User)
+def create_user(user: User):
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (user.name, user.email))
+    db.commit()
+    return user
+
+# Posts Endpoints
+
+@app.get("/posts/", response_model=List[Post])
+def read_posts():
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM posts")
+    results = cursor.fetchall()
+    return results
+
+@app.get("/posts/{post_id}", response_model=Post)
+def read_post(post_id: int):
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM posts WHERE id = %s", (post_id,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return result
+
+@app.post("/posts/", response_model=Post)
+def create_post(post: Post):
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO posts (title, content, user_id) VALUES (%s, %s, %s)", (post.title, post.content, post.user_id))
+    db.commit()
+    return post
