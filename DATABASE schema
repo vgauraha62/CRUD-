@@ -1,0 +1,13 @@
+CREATE TABLE users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255),
+  email VARCHAR(255)
+);
+
+CREATE TABLE posts (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255),
+  content TEXT,
+  user_id INT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
